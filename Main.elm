@@ -1,10 +1,9 @@
-import ElmInvaders exposing (update, view)
+import ElmInvaders exposing (initState, update, view)
 import StartApp.Simple exposing (start)
 
 main =
   start
-    {
-      model = 0,
-      update = update,
-      view = view
+    { model = initState
+    , update = update
+    , view = view
     }
