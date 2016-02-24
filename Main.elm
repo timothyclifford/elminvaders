@@ -1,9 +1,6 @@
-import ElmInvaders exposing (initState, update, view)
-import StartApp.Simple exposing (start)
+import ElmInvaders exposing (..)
+import Window
+import Keyboard
 
 main =
-  start
-    { model = initState
-    , update = update
-    , view = view
-    }
+    Signal.map2 view Window.dimensions gameState

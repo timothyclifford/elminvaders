@@ -1,16 +1,20 @@
 module ElmInvadersModels where
 
+import Time exposing (..)
+
 type View = StartView | GameView | EndView
 type Action = StartGame | Move | Shoot
+type Breed = Easy | Medium | Hard
 
 type alias Ship =
-  { posX: Int
-  , posY: Int
+  { x: Int
+  , y: Int
   }
 
 type alias Invader =
-  { posX: Int
-  , posY: Int
+  { x: Int
+  , y: Int
+  , breed: Breed
   }
 
 type alias State =
@@ -19,4 +23,15 @@ type alias State =
   , invaders: List Invader
   , score: Int
   , lives: Int
+  }
+
+type alias KeyboardInput =
+  { x: Int
+  , y: Int
+  }
+
+type alias Input =
+  { space: Bool
+  , arrows: KeyboardInput
+  , delta: Time
   }
