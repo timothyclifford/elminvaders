@@ -10733,11 +10733,11 @@ Elm.ElmInvaders.make = function (_elm) {
    if (_elm.ElmInvaders.values) return _elm.ElmInvaders.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
+   $Color = Elm.Color.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $ElmInvadersModels = Elm.ElmInvadersModels.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $Html$Attributes = Elm.Html.Attributes.make(_elm),
-   $Html$Events = Elm.Html.Events.make(_elm),
+   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $Keyboard = Elm.Keyboard.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
@@ -10745,14 +10745,10 @@ Elm.ElmInvaders.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $Time = Elm.Time.make(_elm);
    var _op = {};
-   var view = F2(function (_p0,game) {    var _p1 = _p0;return A2($Html.div,_U.list([]),_U.list([$Html.text("Hello")]));});
-   var endView = F2(function (address,state) {    return A2($Html.div,_U.list([]),_U.list([$Html.text("End")]));});
-   var gameView = F2(function (address,state) {    return A2($Html.div,_U.list([]),_U.list([$Html.text("Ship")]));});
-   var startView = function (address) {
-      return A2($Html.div,
-      _U.list([$Html$Attributes.$class("start")]),
-      _U.list([A2($Html.button,_U.list([A2($Html$Events.onClick,address,$ElmInvadersModels.StartGame)]),_U.list([$Html.text("Click me")]))]));
-   };
+   var view = F2(function (_p0,game) {
+      var _p1 = _p0;
+      return A3($Graphics$Collage.collage,800,600,_U.list([A2($Graphics$Collage.filled,A4($Color.rgba,0,0,0,0.5),A2($Graphics$Collage.rect,100,100))]));
+   });
    var stepGame = F2(function (input,state) {    return state;});
    var delta = A2($Signal.map,$Time.inSeconds,$Time.fps(30));
    var input = A2($Signal.sampleOn,delta,A4($Signal.map3,$ElmInvadersModels.Input,$Keyboard.space,$Keyboard.arrows,delta));
@@ -10768,9 +10764,6 @@ Elm.ElmInvaders.make = function (_elm) {
                                     ,input: input
                                     ,stepGame: stepGame
                                     ,gameState: gameState
-                                    ,startView: startView
-                                    ,gameView: gameView
-                                    ,endView: endView
                                     ,view: view};
 };
 Elm.Main = Elm.Main || {};

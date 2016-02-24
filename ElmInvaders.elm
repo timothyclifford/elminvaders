@@ -2,6 +2,9 @@ module ElmInvaders where
 
 import ElmInvadersModels exposing (..)
 
+import Color exposing (..)
+import Graphics.Collage exposing (..)
+import Graphics.Element exposing (..)
 import Time exposing (..)
 import Keyboard exposing (..)
 import Html exposing (..)
@@ -47,30 +50,9 @@ gameState =
 
 -- VIEW
 
-startView : Signal.Address Action -> Html
-startView address =
-  div [ class "start" ]
-  [ button [ onClick address StartGame ] [ text "Click me" ]
-  ]
-
-gameView : Signal.Address Action -> State -> Html
-gameView address state =
-  div [] [ text "Ship" ]
-
-endView : Signal.Address Action -> State -> Html
-endView address state =
-  div [] [ text "End" ]
-
--- view : Signal.Address Action -> State -> Html
--- view address state =
---   case state.screen of
---     StartView ->
---       startView address
---     GameView ->
---       gameView address state
---     EndView ->
---       endView address state
-
-view : (Int,Int) -> State -> Html
+view : (Int,Int) -> State -> Element
 view (w,h) game =
-  div [] [ text "Hello" ]
+  collage 800 600
+  [ rect 100 100
+      |> filled (rgba 0 0 0 0.5)
+  ]
