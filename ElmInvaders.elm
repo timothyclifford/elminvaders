@@ -40,19 +40,31 @@ input =
           Keyboard.arrows
           delta
 
-stepGame : Input -> State -> State
-stepGame input state =
-  state
+updateShip : Input -> State -> Ship
+updateShip input state =
+  let
+    updateX = state.ship.x + 1
+    updateY = state.ship.y + 1
+  in
+    { x = updateX
+    , y = updateY
+    }
+
+
+updateGame : Input -> State -> State
+updateGame input state =
+  { state | ship = (updateShip input state)  }
 
 gameState : Signal State
 gameState =
-    Signal.foldp stepGame defaultState input
+    Signal.foldp updateGame defaultState input
 
 -- VIEW
 
-view : (Int,Int) -> State -> Element
-view (w,h) game =
+view : (Int, Int) -> State -> Element
+view (w, h) state =
   collage 800 600
   [ rect 100 100
-      |> filled (rgba 0 0 0 0.5)
+    |> filled (rgba 0 0 0 0.5)
+    |> move (state.ship.x, state.ship.y)
   ]

@@ -7,13 +7,17 @@ type Action = StartGame | Move | Shoot
 type Breed = Easy | Medium | Hard
 
 type alias Ship =
-  { x: Int
-  , y: Int
+  { x: Float
+  , vx: Float
+  , y: Float
+  , vy: Float
   }
 
 type alias Invader =
-  { x: Int
-  , y: Int
+  { x: Float
+  , vx: Float
+  , y: Float
+  , vy: Float
   , breed: Breed
   }
 

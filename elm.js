@@ -10745,24 +10745,31 @@ Elm.ElmInvaders.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $Time = Elm.Time.make(_elm);
    var _op = {};
-   var view = F2(function (_p0,game) {
+   var view = F2(function (_p0,state) {
       var _p1 = _p0;
-      return A3($Graphics$Collage.collage,800,600,_U.list([A2($Graphics$Collage.filled,A4($Color.rgba,0,0,0,0.5),A2($Graphics$Collage.rect,100,100))]));
+      return A3($Graphics$Collage.collage,
+      800,
+      600,
+      _U.list([A2($Graphics$Collage.move,
+      {ctor: "_Tuple2",_0: state.ship.x,_1: state.ship.y},
+      A2($Graphics$Collage.filled,A4($Color.rgba,0,0,0,0.5),A2($Graphics$Collage.rect,100,100)))]));
    });
-   var stepGame = F2(function (input,state) {    return state;});
+   var updateShip = F2(function (input,state) {    var updateY = state.ship.y + 1;var updateX = state.ship.x + 1;return {x: updateX,y: updateY};});
+   var updateGame = F2(function (input,state) {    return _U.update(state,{ship: A2(updateShip,input,state)});});
    var delta = A2($Signal.map,$Time.inSeconds,$Time.fps(30));
    var input = A2($Signal.sampleOn,delta,A4($Signal.map3,$ElmInvadersModels.Input,$Keyboard.space,$Keyboard.arrows,delta));
    var defaultInvaders = _U.list([]);
    var defaultShip = {x: 0,y: 0};
    var defaultState = A5($ElmInvadersModels.State,$ElmInvadersModels.StartView,defaultShip,defaultInvaders,0,3);
-   var gameState = A3($Signal.foldp,stepGame,defaultState,input);
+   var gameState = A3($Signal.foldp,updateGame,defaultState,input);
    return _elm.ElmInvaders.values = {_op: _op
                                     ,defaultShip: defaultShip
                                     ,defaultInvaders: defaultInvaders
                                     ,defaultState: defaultState
                                     ,delta: delta
                                     ,input: input
-                                    ,stepGame: stepGame
+                                    ,updateShip: updateShip
+                                    ,updateGame: updateGame
                                     ,gameState: gameState
                                     ,view: view};
 };
