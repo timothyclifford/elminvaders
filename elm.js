@@ -10699,8 +10699,8 @@ Elm.ElmInvadersModels.make = function (_elm) {
    var Input = F3(function (a,b,c) {    return {space: a,arrows: b,delta: c};});
    var KeyboardInput = F2(function (a,b) {    return {x: a,y: b};});
    var State = F5(function (a,b,c,d,e) {    return {screen: a,ship: b,invaders: c,score: d,lives: e};});
-   var Invader = F3(function (a,b,c) {    return {x: a,y: b,breed: c};});
-   var Ship = F2(function (a,b) {    return {x: a,y: b};});
+   var Invader = F5(function (a,b,c,d,e) {    return {x: a,vx: b,y: c,vy: d,breed: e};});
+   var Ship = F4(function (a,b,c,d) {    return {x: a,vx: b,y: c,vy: d};});
    var Hard = {ctor: "Hard"};
    var Medium = {ctor: "Medium"};
    var Easy = {ctor: "Easy"};
@@ -10754,12 +10754,21 @@ Elm.ElmInvaders.make = function (_elm) {
       {ctor: "_Tuple2",_0: state.ship.x,_1: state.ship.y},
       A2($Graphics$Collage.filled,A4($Color.rgba,0,0,0,0.5),A2($Graphics$Collage.rect,100,100)))]));
    });
-   var updateShip = F2(function (input,state) {    var updateY = state.ship.y + 1;var updateX = state.ship.x + 1;return {x: updateX,y: updateY};});
-   var updateGame = F2(function (input,state) {    return _U.update(state,{ship: A2(updateShip,input,state)});});
+   var updateInvaders = F2(function (input,state) {    return _U.list([]);});
+   var updateShip = F2(function (input,state) {
+      var updateVY = state.ship.vy + 1;
+      var updateVX = state.ship.vx + 1;
+      var updateY = state.ship.y + 1;
+      var updateX = state.ship.x + 1;
+      return {x: updateX,y: updateY,vx: updateVX,vy: updateVY};
+   });
+   var updateGame = F2(function (input,state) {
+      return A2($Debug.log,"test",_U.update(state,{ship: A2(updateShip,input,state),invaders: A2(updateInvaders,input,state)}));
+   });
    var delta = A2($Signal.map,$Time.inSeconds,$Time.fps(30));
    var input = A2($Signal.sampleOn,delta,A4($Signal.map3,$ElmInvadersModels.Input,$Keyboard.space,$Keyboard.arrows,delta));
    var defaultInvaders = _U.list([]);
-   var defaultShip = {x: 0,y: 0};
+   var defaultShip = {x: 0,y: 0,vx: 0,vy: 0};
    var defaultState = A5($ElmInvadersModels.State,$ElmInvadersModels.StartView,defaultShip,defaultInvaders,0,3);
    var gameState = A3($Signal.foldp,updateGame,defaultState,input);
    return _elm.ElmInvaders.values = {_op: _op
@@ -10769,6 +10778,7 @@ Elm.ElmInvaders.make = function (_elm) {
                                     ,delta: delta
                                     ,input: input
                                     ,updateShip: updateShip
+                                    ,updateInvaders: updateInvaders
                                     ,updateGame: updateGame
                                     ,gameState: gameState
                                     ,view: view};

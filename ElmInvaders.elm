@@ -3,6 +3,7 @@ module ElmInvaders where
 import ElmInvadersModels exposing (..)
 
 import Color exposing (..)
+import Debug exposing (..)
 import Graphics.Collage exposing (..)
 import Graphics.Element exposing (..)
 import Time exposing (..)
@@ -17,6 +18,8 @@ defaultShip : Ship
 defaultShip =
   { x = 0
   , y = 0
+  , vx = 0
+  , vy = 0
   }
 
 defaultInvaders : List Invader
@@ -45,15 +48,25 @@ updateShip input state =
   let
     updateX = state.ship.x + 1
     updateY = state.ship.y + 1
+    updateVX = state.ship.vx + 1
+    updateVY = state.ship.vy + 1
   in
     { x = updateX
     , y = updateY
+    , vx = updateVX
+    , vy = updateVY
     }
 
+updateInvaders : Input -> State -> List Invader
+updateInvaders input state =
+  []
 
 updateGame : Input -> State -> State
 updateGame input state =
-  { state | ship = (updateShip input state)  }
+  log "input" input
+  { state | ship = (updateShip input state)
+  , invaders = (updateInvaders input state)
+  }
 
 gameState : Signal State
 gameState =
