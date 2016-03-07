@@ -16,7 +16,7 @@ import Html.Events exposing (..)
 
 defaultShip : Ship
 defaultShip =
-  Ship 0 0 0 0
+  Ship 0
 
 defaultInvaders : List Invader
 defaultInvaders =
@@ -24,7 +24,7 @@ defaultInvaders =
 
 defaultState : State
 defaultState =
-  State StartView defaultShip defaultInvaders 0 3
+  State StartView defaultShip defaultInvaders [] 0 3
 
 delta : Signal Time
 delta =
@@ -40,23 +40,39 @@ input = Signal.sampleOn delta <|
 
 updateShip : Input -> State -> Ship
 updateShip input state =
-    { x = state.ship.x + toFloat (input.arrows.x * 10)
-    , y = 0
-    , vx = 0
-    , vy = 0
-    }
+  { x = state.ship.x + toFloat (input.arrows.x * 10)
+  }
 
 updateInvaders : Input -> State -> List Invader
 updateInvaders input state =
   []
 
+moveBullet : Bullet -> Bullet
+moveBullet bullet =
+  { x = bullet.x
+  , y = bullet.y + 1
+  }
+
+updateBullets : Input -> State -> List Bullet
+updateBullets input state =
+  let
+    moreBullets = if input.space then Bullet state.ship.x 0 :: state.bullets else state.bullets
+    updatedBullets = List.map moveBullet moreBullets
+  in
+    updatedBullets
+
 updateGame : Input -> State -> State
 updateGame input state =
   let
     logInput = log "input" input
+    logState = log "state" state
+    newShip = updateShip input state
+    newInvaders = updateInvaders input state
+    newBullets = updateBullets input state
   in
-    { state | ship = (updateShip input state)
-    , invaders = (updateInvaders input state)
+    { state | ship = newShip
+    , invaders = newInvaders
+    , bullets = newBullets
     }
 
 gameState : Signal State
@@ -65,10 +81,19 @@ gameState =
 
 -- VIEW
 
-view : (Int, Int) -> State -> Element
-view (w, h) state =
-  collage 800 600
-  [ rect 100 100
-    |> filled (rgba 0 0 0 0.5)
-    |> move (state.ship.x, state.ship.y)
-  ]
+renderBullet : Bullet -> Form
+renderBullet bullet =
+  rect 5 5
+    |> filled (rgba 255 255 255 1)
+    |> move (bullet.x, bullet.y)
+
+render : (Int, Int) -> State -> Element
+render (w, h) state =
+  container w h midBottom <|
+  collage w h
+    [ rect (toFloat w) (toFloat h)
+      |> filled (rgba 0 0 0 1)
+    , rect 25 25
+      |> filled (rgba 255 255 255 1)
+      |> moveX state.ship.x
+    ]

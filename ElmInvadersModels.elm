@@ -8,23 +8,24 @@ type Breed = Easy | Medium | Hard
 
 type alias Ship =
   { x: Float
-  , vx: Float
-  , y: Float
-  , vy: Float
   }
 
 type alias Invader =
   { x: Float
-  , vx: Float
   , y: Float
-  , vy: Float
   , breed: Breed
+  }
+
+type alias Bullet =
+  { x: Float
+  , y: Float
   }
 
 type alias State =
   { view: View
   , ship: Ship
   , invaders: List Invader
+  , bullets: List Bullet
   , score: Int
   , lives: Int
   }
