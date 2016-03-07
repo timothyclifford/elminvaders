@@ -22,7 +22,7 @@ type alias Invader =
   }
 
 type alias State =
-  { screen: View
+  { view: View
   , ship: Ship
   , invaders: List Invader
   , score: Int

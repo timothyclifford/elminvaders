@@ -16,11 +16,7 @@ import Html.Events exposing (..)
 
 defaultShip : Ship
 defaultShip =
-  { x = 0
-  , y = 0
-  , vx = 0
-  , vy = 0
-  }
+  Ship 0 0 0 0
 
 defaultInvaders : List Invader
 defaultInvaders =
@@ -35,26 +31,19 @@ delta =
     Signal.map inSeconds (fps 30)
 
 input : Signal Input
-input =
-    Signal.sampleOn delta <|
-        Signal.map3
-          Input
-          Keyboard.space
-          Keyboard.arrows
-          delta
+input = Signal.sampleOn delta <|
+  Signal.map3
+    Input
+    Keyboard.space
+    Keyboard.arrows
+    delta
 
 updateShip : Input -> State -> Ship
 updateShip input state =
-  let
-    updateX = state.ship.x + 1
-    updateY = state.ship.y + 1
-    updateVX = state.ship.vx + 1
-    updateVY = state.ship.vy + 1
-  in
-    { x = updateX
-    , y = updateY
-    , vx = updateVX
-    , vy = updateVY
+    { x = state.ship.x + toFloat (input.arrows.x * 10)
+    , y = 0
+    , vx = 0
+    , vy = 0
     }
 
 updateInvaders : Input -> State -> List Invader
@@ -63,10 +52,12 @@ updateInvaders input state =
 
 updateGame : Input -> State -> State
 updateGame input state =
-  log "input" input
-  { state | ship = (updateShip input state)
-  , invaders = (updateInvaders input state)
-  }
+  let
+    logInput = log "input" input
+  in
+    { state | ship = (updateShip input state)
+    , invaders = (updateInvaders input state)
+    }
 
 gameState : Signal State
 gameState =
