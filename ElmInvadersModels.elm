@@ -14,6 +14,7 @@ type alias Invader =
   { x: Float
   , y: Float
   , breed: Breed
+  , dead: Bool
   }
 
 type alias Bullet =
@@ -25,7 +26,7 @@ type alias State =
   { view: View
   , ship: Ship
   , invaders: List (List Invader)
-  , bullets: List Bullet
+  , bullet: Bullet
   , score: Int
   , lives: Int
   }
