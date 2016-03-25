@@ -1,0 +1,15 @@
+{
+  "ship": false,
+  "bullets": false,
+  "aliens": false,
+  "score": false,
+  "levels": false,
+  "multiPlayer": false,
+  "links": [
+    "http://elm-lang.org/blog/making-pong",
+    "http://gelatindesign.co.uk/developing-games-in-elm/",
+    "https://github.com/Dobiasd/Breakout",
+    "https://github.com/jcollard/elmtris",
+    ""
+  ]
+}

@@ -24,7 +24,7 @@ type alias Bullet =
 type alias State =
   { view: View
   , ship: Ship
-  , invaders: List Invader
+  , invaders: List (List Invader)
   , bullets: List Bullet
   , score: Int
   , lives: Int

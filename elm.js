@@ -10747,33 +10747,44 @@ Elm.ElmInvaders.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $Time = Elm.Time.make(_elm);
    var _op = {};
-   var render = F2(function (_p0,state) {
-      var _p1 = _p0;
-      var _p3 = _p1._0;
-      var _p2 = _p1._1;
-      return A4($Graphics$Element.container,
-      _p3,
-      _p2,
-      $Graphics$Element.midBottom,
-      A3($Graphics$Collage.collage,
-      _p3,
-      _p2,
-      _U.list([A2($Graphics$Collage.filled,A4($Color.rgba,0,0,0,1),A2($Graphics$Collage.rect,$Basics.toFloat(_p3),$Basics.toFloat(_p2)))
-              ,A2($Graphics$Collage.moveX,state.ship.x,A2($Graphics$Collage.filled,A4($Color.rgba,255,255,255,1),A2($Graphics$Collage.rect,25,25)))])));
-   });
+   var moveInvader = function (invader) {    return {x: invader.x,y: invader.y + 0.1,breed: invader.breed};};
+   var updateInvaders = F2(function (input,state) {    return A2($List.map,function (r) {    return A2($List.map,moveInvader,r);},state.invaders);});
+   var delta = A2($Signal.map,$Time.inSeconds,$Time.fps(30));
+   var input = A2($Signal.sampleOn,delta,A4($Signal.map3,$ElmInvadersModels.Input,$Keyboard.space,$Keyboard.arrows,delta));
+   var defaultShip = $ElmInvadersModels.Ship(0);
+   var invadersColumns = 8;
+   var invadersRow = function (y) {
+      return A2($List.map,function (x) {    return A3($ElmInvadersModels.Invader,x * 20,y,$ElmInvadersModels.Easy);},_U.range(0,invadersColumns));
+   };
+   var defaultInvaders = function () {
+      var invaders = _U.list([invadersRow(0),invadersRow(20),invadersRow(40),invadersRow(60)]);
+      var seedY = 0;
+      var seedX = 0;
+      return invaders;
+   }();
+   var defaultState = A6($ElmInvadersModels.State,$ElmInvadersModels.StartView,defaultShip,defaultInvaders,_U.list([]),0,3);
+   var invadersRows = 5;
+   var bulletColour = A4($Color.rgba,255,255,255,1);
+   var bulletSize = 5;
    var renderBullet = function (bullet) {
       return A2($Graphics$Collage.move,
       {ctor: "_Tuple2",_0: bullet.x,_1: bullet.y},
-      A2($Graphics$Collage.filled,A4($Color.rgba,255,255,255,1),A2($Graphics$Collage.rect,5,5)));
+      A2($Graphics$Collage.filled,bulletColour,A2($Graphics$Collage.rect,bulletSize,bulletSize)));
    };
-   var moveBullet = function (bullet) {    return {x: bullet.x,y: bullet.y + 1};};
+   var bulletSpeed = 1;
+   var moveBullet = function (bullet) {    return {x: bullet.x,y: bullet.y + bulletSpeed};};
    var updateBullets = F2(function (input,state) {
-      var moreBullets = input.space ? A2($List._op["::"],A2($ElmInvadersModels.Bullet,state.ship.x,0),state.bullets) : state.bullets;
-      var updatedBullets = A2($List.map,moveBullet,moreBullets);
+      var bullets = input.space ? A2($List._op["::"],A2($ElmInvadersModels.Bullet,state.ship.x,0),state.bullets) : state.bullets;
+      var updatedBullets = A2($List.map,moveBullet,bullets);
       return updatedBullets;
    });
-   var updateInvaders = F2(function (input,state) {    return _U.list([]);});
-   var updateShip = F2(function (input,state) {    return {x: state.ship.x + $Basics.toFloat(input.arrows.x * 10)};});
+   var shipColour = A4($Color.rgba,255,255,255,1);
+   var shipSize = 25;
+   var renderShip = function (ship) {
+      return A2($Graphics$Collage.moveX,ship.x,A2($Graphics$Collage.filled,shipColour,A2($Graphics$Collage.rect,shipSize,shipSize)));
+   };
+   var shipSpeed = 10;
+   var updateShip = F2(function (input,state) {    return {x: state.ship.x + $Basics.toFloat(input.arrows.x * shipSpeed)};});
    var updateGame = F2(function (input,state) {
       var newBullets = A2(updateBullets,input,state);
       var newInvaders = A2(updateInvaders,input,state);
@@ -10782,24 +10793,47 @@ Elm.ElmInvaders.make = function (_elm) {
       var logInput = A2($Debug.log,"input",input);
       return _U.update(state,{ship: newShip,invaders: newInvaders,bullets: newBullets});
    });
-   var delta = A2($Signal.map,$Time.inSeconds,$Time.fps(30));
-   var input = A2($Signal.sampleOn,delta,A4($Signal.map3,$ElmInvadersModels.Input,$Keyboard.space,$Keyboard.arrows,delta));
-   var defaultInvaders = _U.list([]);
-   var defaultShip = $ElmInvadersModels.Ship(0);
-   var defaultState = A6($ElmInvadersModels.State,$ElmInvadersModels.StartView,defaultShip,defaultInvaders,_U.list([]),0,3);
    var gameState = A3($Signal.foldp,updateGame,defaultState,input);
+   var backgroundColour = A4($Color.rgba,0,0,0,1);
+   var renderBackground = function (_p0) {
+      var _p1 = _p0;
+      return A2($Graphics$Collage.filled,backgroundColour,A2($Graphics$Collage.rect,$Basics.toFloat(_p1._0),$Basics.toFloat(_p1._1)));
+   };
+   var render = F2(function (_p2,state) {
+      var _p3 = _p2;
+      var _p5 = _p3._0;
+      var _p4 = _p3._1;
+      return A4($Graphics$Element.container,
+      _p5,
+      _p4,
+      $Graphics$Element.midBottom,
+      A3($Graphics$Collage.collage,_p5,_p4,_U.list([renderBackground({ctor: "_Tuple2",_0: _p5,_1: _p4}),renderShip(state.ship)])));
+   });
    return _elm.ElmInvaders.values = {_op: _op
+                                    ,backgroundColour: backgroundColour
+                                    ,shipSpeed: shipSpeed
+                                    ,shipSize: shipSize
+                                    ,shipColour: shipColour
+                                    ,bulletSpeed: bulletSpeed
+                                    ,bulletSize: bulletSize
+                                    ,bulletColour: bulletColour
+                                    ,invadersRows: invadersRows
+                                    ,invadersColumns: invadersColumns
                                     ,defaultShip: defaultShip
                                     ,defaultInvaders: defaultInvaders
+                                    ,invadersRow: invadersRow
                                     ,defaultState: defaultState
                                     ,delta: delta
                                     ,input: input
                                     ,updateShip: updateShip
                                     ,updateInvaders: updateInvaders
-                                    ,moveBullet: moveBullet
+                                    ,moveInvader: moveInvader
                                     ,updateBullets: updateBullets
+                                    ,moveBullet: moveBullet
                                     ,updateGame: updateGame
                                     ,gameState: gameState
+                                    ,renderBackground: renderBackground
+                                    ,renderShip: renderShip
                                     ,renderBullet: renderBullet
                                     ,render: render};
 };
