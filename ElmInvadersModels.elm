@@ -11,6 +11,12 @@ type alias Ship =
   { x: Float
   }
 
+type alias Shield =
+  { x: Float
+  , y: Float
+  , layers: Int
+  }
+
 type alias Invader =
   { x: Float
   , y: Float
@@ -28,10 +34,13 @@ type alias Bullet =
 type alias State =
   { view: View
   , ship: Ship
+  , shields: List Shield
   , invaders: List (List Invader)
   , bullet: Bullet
+  , invaderBullets: List Bullet
   , score: Int
   , lives: Int
+  , steps: Int
   }
 
 type alias KeyboardInput =

@@ -25,15 +25,20 @@ shipSpeed = 10
 shipRadius = 12
 shipSize = shipRadius * 2
 shipColour = (rgba 255 255 255 1)
-bulletSpeed = 10
-bulletRadius = 2
+bulletSpeed = 15
+bulletRadius = 4
 bulletSize = bulletRadius * 2
 bulletColour = (rgba 255 255 255 1)
 invaderRadius = 15
 invaderSize = invaderRadius * 2
 invaderColour = (rgba 255 255 255 1)
+invaderGapX = 25
+invaderGapY = 15
 invadersRows = 4
 invadersColumns = 8
+invadersMoveX = 5
+invadersMoveY = 2
+invadersMoveMax = screenWidth - (invaderSize * 2) - (invadersColumns * (invaderSize + invaderGapX))
 
 -- UPDATE
 
@@ -41,28 +46,46 @@ defaultShip : Ship
 defaultShip =
   Ship 0
 
+defaultShields : List Shield
+defaultShields =
+  [ Shield (screenWidth / 5 * 2) (screenBottom + 50) 5
+  , Shield (screenWidth / 5 * 3) (screenBottom + 50) 5
+  , Shield (screenWidth / 5 * 4) (screenBottom + 50) 5 ]
+
 defaultInvaders : List (List Invader)
 defaultInvaders =
-  [ (List.map (\x -> Invader (defaultInvaderX x) (defaultInvaderY 0) 0 Right Easy False) [0..invadersColumns])
-  , (List.map (\x -> Invader (defaultInvaderX x) (defaultInvaderY 1) 0 Right Easy False) [0..invadersColumns])
-  , (List.map (\x -> Invader (defaultInvaderX x) (defaultInvaderY 2) 0 Right Easy False) [0..invadersColumns])
-  , (List.map (\x -> Invader (defaultInvaderX x) (defaultInvaderY 3) 0 Right Easy False) [0..invadersColumns]) ]
+  [0..invadersRows]
+    |> List.map (\y -> (List.map (\x -> defaultInvader x y) [0..invadersColumns]))
 
-defaultInvaderX : Float -> Float
-defaultInvaderX x =
-  (screenLeft + invaderSize + (x * (invaderSize * 2)))
-
-defaultInvaderY : Float -> Float
-defaultInvaderY y =
-  (screenTop - invaderSize - (y * (invaderSize * 2)))
+defaultInvader : Float -> Float -> Invader
+defaultInvader x y =
+  let
+    x = (screenLeft + invaderSize + (x * (invaderSize + invaderGapX)))
+    y = (screenTop - 50 - invaderSize - (y * (invaderSize + invaderGapY)))
+  in
+    Invader x y 0 Right Easy False
 
 defaultBullet : Bullet
 defaultBullet =
   Bullet 0 1000
 
+defaultInvaderBullets : List Bullet
+defaultInvaderBullets =
+  []
+
+
 defaultState : State
 defaultState =
-  State StartView defaultShip defaultInvaders defaultBullet 0 3
+  State
+    StartView
+    defaultShip
+    defaultShields
+    defaultInvaders
+    defaultBullet
+    defaultInvaderBullets
+    0
+    3
+    0
 
 delta : Signal Time
 delta =
@@ -110,20 +133,34 @@ moveBullet bullet =
 
 updateInvaders : Input -> State -> List (List Invader)
 updateInvaders input state =
-  state.invaders
-    |> List.map (\r -> List.map moveInvader r)
-    |> List.map (\r -> List.map (\i -> isInvaderDead i state.bullet) r)
+  let
+    deadInvaders = List.map (\r -> List.map (\i -> isInvaderDead i state.bullet) r) state.invaders
+    invaders' =
+      if state.steps % 1 == 0
+      then List.map (\r -> List.map moveInvader r) deadInvaders
+      else deadInvaders
+  in
+    invaders'
 
 moveInvader : Invader -> Invader
 moveInvader invader =
-  if invader.delta == 270 && invader.direction == Right then
-    { invader | x = invader.x - 1, y = invader.y - 1, delta = 0, direction = Left }
-  else if invader.delta == 270 && invader.direction == Left then
-    { invader | x = invader.x + 1, y = invader.y - 1, delta = 0, direction = Right }
+  -- If moving right and at screen edge, change to left
+  if invader.delta >= invadersMoveMax && invader.direction == Right then
+    { invader
+    | x = invader.x - invadersMoveX
+    , y = invader.y - invadersMoveY
+    , delta = 0, direction = Left }
+  -- If moving left and at screen edge, change to right
+  else if invader.delta >= invadersMoveMax && invader.direction == Left then
+    { invader
+    | x = invader.x + invadersMoveX
+    , y = invader.y - invadersMoveY
+    , delta = 0, direction = Right }
+  -- Keep moving
   else
     { invader
-    | x = invader.x + (if invader.direction == Right then 1 else -1)
-    , delta = invader.delta + 1 }
+    | x = invader.x + (if invader.direction == Right then invadersMoveX else -invadersMoveX)
+    , delta = invader.delta + invadersMoveX }
 
 isInvaderDead : Invader -> Bullet -> Invader
 isInvaderDead invader bullet =
@@ -145,9 +182,11 @@ updateGame input state =
     bullet' = updateBullet input state
     invaders' = updateInvaders input state
   in
-    { state | ship = ship'
+    { state
+    | ship = ship'
     , invaders = invaders'
-    , bullet = bullet' }
+    , bullet = bullet'
+    , steps = state.steps + 1}
 
 gameState : Signal State
 gameState =
@@ -164,11 +203,11 @@ renderShip : Ship -> Form
 renderShip ship =
   rect shipSize shipSize
     |> filled shipColour
-    |> move (ship.x, (screenBottom + shipRadius))
+    |> move (ship.x, (screenBottom + shipSize))
 
 renderBullet : Bullet -> Form
 renderBullet bullet =
-  rect bulletSize bulletSize
+  circle bulletRadius
     |> filled bulletColour
     |> move (bullet.x, bullet.y)
 
