@@ -5,6 +5,7 @@ import Time exposing (..)
 type View = StartView | GameView | EndView
 type Action = StartGame | Move | Shoot
 type Breed = Easy | Medium | Hard
+type Direction = Left | Right
 
 type alias Ship =
   { x: Float
@@ -13,6 +14,8 @@ type alias Ship =
 type alias Invader =
   { x: Float
   , y: Float
+  , delta: Float
+  , direction: Direction
   , breed: Breed
   , dead: Bool
   }
