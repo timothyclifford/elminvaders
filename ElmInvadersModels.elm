@@ -14,7 +14,7 @@ type alias Ship =
 type alias Shield =
   { x: Float
   , y: Float
-  , layers: Int
+  , layers: Float
   }
 
 type alias Invader =
