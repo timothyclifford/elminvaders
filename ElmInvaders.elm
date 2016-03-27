@@ -39,7 +39,7 @@ invaderGapX = 25
 invaderGapY = 15
 invadersRows = 4
 invadersColumns = 8
-invadersMoveX = 5
+invadersMoveX = 10
 invadersMoveY = 2
 invadersMoveMax = screenWidth - (invaderSize * 2) - (invadersColumns * (invaderSize + invaderGapX))
 
@@ -113,21 +113,9 @@ updateShields input state =
 
 playerDidShoot : Shield -> Bullet -> Shield
 playerDidShoot shield bullet =
-  let
-    result = bulletHitShield shield bullet
-    --log' = log "result" result
-  in
-    if result
-    then { shield | layers = shield.layers - 1 }
-    else shield
-
-bulletHitShield : Shield -> Bullet -> Bool
-bulletHitShield shield bullet =
-  (shield.layers > 0)
-  && ((bullet.x - bulletRadius) <= (shield.x + (shieldWidth / 2)))
-  && ((bullet.x + bulletRadius) >= (shield.x - (shieldWidth / 2)))
-  && ((bullet.y - bulletRadius) <= (shield.y + (shieldHeight)))
-  && ((bullet.y + bulletRadius) >= (shield.y - (shieldHeight)))
+  if shield.layers > 0 && bulletHitShield shield bullet
+  then { shield | layers = shield.layers - 1 }
+  else shield
 
 updateBullet : Input -> State -> Bullet
 updateBullet input state =
@@ -150,19 +138,21 @@ hitShield : List Shield -> Bullet -> Bullet
 hitShield shields bullet =
   let
     -- Iterate through all rows then columns, check bullet is within shield
-    didHit = List.any (\s -> (bulletHitShield s bullet)) shields
+    didHit = List.any (\s -> s.layers > 0 && (bulletHitShield s bullet)) shields
   in
     { x = bullet.x
-    , y = if didHit then 10000 else bullet.y }
+    , y = if didHit then 10000 else bullet.y
+    }
 
 hitInvader : List (List Invader) -> Bullet -> Bullet
 hitInvader invaders bullet =
   let
     -- Iterate through all rows then columns, check bullet is within invader
-    didHit = List.any (\r -> List.any (\i -> (within i bullet)) r) invaders
+    didHit = List.any (\r -> List.any (\i -> not i.dead && (bulletHitInvader i bullet)) r) invaders
   in
     { x = bullet.x
-    , y = if didHit then 10000 else bullet.y }
+    , y = if didHit then 10000 else bullet.y
+    }
 
 moveBullet : Bullet -> Bullet
 moveBullet bullet =
@@ -171,45 +161,60 @@ moveBullet bullet =
 updateInvaders : Input -> State -> List (List Invader)
 updateInvaders input state =
   let
-    deadInvaders = List.map (\r -> List.map (\i -> isInvaderDead i state.bullet) r) state.invaders
-    invaders' =
-      if state.steps % 1 == 0
-      then List.map (\r -> List.map moveInvader r) deadInvaders
-      else deadInvaders
+    invaders' = List.map (\r -> List.map (\i -> isInvaderDead i state.bullet) r) state.invaders
   in
-    invaders'
+    if state.steps % 15 == 0
+    then List.map (\r -> List.map moveInvader r) invaders'
+    else invaders'
+
+isInvaderDead : Invader -> Bullet -> Invader
+isInvaderDead invader bullet =
+  { invader | dead = invader.dead || (bulletHitInvader invader bullet) }
 
 moveInvader : Invader -> Invader
 moveInvader invader =
   -- If moving right and at screen edge, change to left
-  if invader.delta >= invadersMoveMax && invader.direction == Right then
-    { invader
+  if invader.delta >= invadersMoveMax && invader.direction == Right
+  then { invader
     | x = invader.x - invadersMoveX
     , y = invader.y - invadersMoveY
-    , delta = 0, direction = Left }
+    , delta = 0
+    , direction = Left
+    }
   -- If moving left and at screen edge, change to right
-  else if invader.delta >= invadersMoveMax && invader.direction == Left then
-    { invader
+  else if invader.delta >= invadersMoveMax && invader.direction == Left
+  then { invader
     | x = invader.x + invadersMoveX
     , y = invader.y - invadersMoveY
-    , delta = 0, direction = Right }
+    , delta = 0
+    , direction = Right
+    }
   -- Keep moving
   else
     { invader
     | x = invader.x + (if invader.direction == Right then invadersMoveX else -invadersMoveX)
-    , delta = invader.delta + invadersMoveX }
+    , delta = invader.delta + invadersMoveX
+    }
 
-isInvaderDead : Invader -> Bullet -> Invader
-isInvaderDead invader bullet =
-  { invader | dead = invader.dead || (within invader bullet) }
+bulletHitShield : Shield -> Bullet -> Bool
+bulletHitShield shield bullet =
+  closeTo
+    (bullet.x + bulletRadius, bullet.y + bulletRadius)
+    (bullet.x - bulletRadius, bullet.y - bulletRadius)
+    (shield.x - (shieldWidth / 2), shield.y - shieldHeight)
+    (shield.x + (shieldWidth / 2), shield.y + shieldHeight)
 
-within : Invader -> Bullet -> Bool
-within invader bullet =
-  (not invader.dead)
-  && (bullet.x <= (invader.x + invaderRadius))
-  && (bullet.x >= (invader.x - invaderRadius))
-  && (bullet.y <= (invader.y + invaderRadius))
-  && (bullet.y >= (invader.y - invaderRadius))
+bulletHitInvader : Invader -> Bullet -> Bool
+bulletHitInvader invader bullet =
+  closeTo
+    (bullet.x + bulletRadius, bullet.y + bulletRadius)
+    (bullet.x - bulletRadius, bullet.y - bulletRadius)
+    (invader.x - invaderRadius, invader.y - invaderRadius)
+    (invader.x + invaderRadius, invader.y + invaderRadius)
+
+closeTo : (Float, Float) -> (Float, Float) -> (Float, Float) -> (Float, Float) -> Bool
+closeTo (ax1, ay1) (ax2, ay2) (bx1, by1) (bx2, by2) =
+  (ax1 >= bx1) && (ay1 >= by1) && (ax2 <= bx2) && (ay2 <= by2)
 
 updateGame : Input -> State -> State
 updateGame input state =
@@ -226,7 +231,8 @@ updateGame input state =
     , shields = shields'
     , invaders = invaders'
     , bullet = bullet'
-    , steps = state.steps + 1 }
+    , steps = state.steps + 1
+    }
 
 gameState : Signal State
 gameState =

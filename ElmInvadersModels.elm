@@ -7,6 +7,11 @@ type Action = StartGame | Move | Shoot
 type Breed = Easy | Medium | Hard
 type Direction = Left | Right
 
+type alias Positioned =
+  { x: Float
+  , y: Float
+  }
+
 type alias Ship =
   { x: Float
   }
