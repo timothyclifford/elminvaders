@@ -39,14 +39,11 @@ type alias Bullet =
   }
 
 type alias State =
-  { view: View
-  , ship: Ship
+  { ship: Ship
   , shields: List Shield
   , invaders: List Invader
   , bullet: Bullet
-  , invaderBullets: List Bullet
-  , score: Int
-  , lives: Int
+  , invaderBullet: Bullet
   , steps: Int
   }
 

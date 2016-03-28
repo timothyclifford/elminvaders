@@ -1,10 +1,12 @@
 module ElmInvaders where
 
 import ElmInvadersModels exposing (..)
+import Array exposing (..)
 import Color exposing (..)
 import Debug exposing (..)
 import Graphics.Collage exposing (..)
 import Graphics.Element exposing (..)
+import Random exposing (..)
 import Time exposing (..)
 import Keyboard exposing (..)
 import Html exposing (..)
@@ -32,6 +34,7 @@ bulletSpeed = 15
 bulletRadius = 4
 bulletSize = bulletRadius * 2
 bulletColour = (rgba 255 255 255 1)
+invaderBulletSpeed = 10
 invaderRadius = 15
 invaderSize = invaderRadius * 2
 invaderColour = (rgba 255 255 255 1)
@@ -55,7 +58,8 @@ defaultShields =
   [ Shield -300 (screenBottom + 80) 5
   , Shield -100 (screenBottom + 80) 5
   , Shield 100 (screenBottom + 80) 5
-  , Shield 300 (screenBottom + 80) 5 ]
+  , Shield 300 (screenBottom + 80) 5
+  ]
 
 defaultInvaders : List Invader
 defaultInvaders =
@@ -78,22 +82,14 @@ defaultBullet : Bullet
 defaultBullet =
   Bullet 0 1000
 
-defaultInvaderBullets : List Bullet
-defaultInvaderBullets =
-  []
+defaultInvaderBullet : Bullet
+defaultInvaderBullet =
+  Bullet 0 -1000
 
 defaultState : State
 defaultState =
   State
-    StartView
-    defaultShip
-    defaultShields
-    defaultInvaders
-    defaultBullet
-    defaultInvaderBullets
-    0
-    3
-    0
+    defaultShip defaultShields defaultInvaders defaultBullet defaultInvaderBullet 0
 
 delta : Signal Time
 delta =
@@ -214,23 +210,56 @@ bulletHitInvader invader bullet =
 
 closeTo : (Float, Float) -> (Float, Float) -> (Float, Float) -> (Float, Float) -> Bool
 closeTo (ax1, ay1) (ax2, ay2) (bx1, by1) (bx2, by2) =
-  (ax1 >= bx1) && (ay1 >= by1) && (ax2 <= bx2) && (ay2 <= by2)
+  (ax1 >= bx1)
+  && (ay1 >= by1)
+  && (ax2 <= bx2)
+  && (ay2 <= by2)
+
+updateInvaderBullet : List Invader -> State -> Bullet
+updateInvaderBullet invaders state =
+  if state.invaderBullet.y > -1000
+  then Bullet state.invaderBullet.x (state.invaderBullet.y - invaderBulletSpeed)
+  else [0..invadersColumns]
+    |> List.filterMap (\c -> getFirst invaders c)
+    |> getRandom
+    |> shootBullet
+
+getFirst : List Invader -> Float -> Maybe Invader
+getFirst invaders column =
+  List.filter (\i -> i.column == column) invaders
+    |> List.sortBy .row
+    |> List.head
+
+getRandom : List Invader -> Maybe Invader
+getRandom invaders =
+  let
+    array = Array.fromList invaders
+    generator = Random.int 0 ((Array.length array) - 1)
+    random = fst (Random.generate generator state.steps)
+  in
+    Array.get random array
+
+shootBullet : Maybe Invader -> Bullet
+shootBullet invader =
+  case invader of
+    Just invader -> Bullet invader.x invader.y
+    Nothing -> Bullet 0 -1000
 
 updateGame : Input -> State -> State
 updateGame input state =
   let
-    --logInput = log "input" input
-    --logState = log "state" state
     ship' = updateShip input state
-    bullet' = updateBullet input state
     shields' = updateShields input state
     invaders' = updateInvaders input state
+    bullet' = updateBullet input state
+    invaderBullet' = updateInvaderBullet invaders' state
   in
     { state
     | ship = ship'
     , shields = shields'
     , invaders = invaders'
     , bullet = bullet'
+    , invaderBullet = invaderBullet'
     , steps = state.steps + 1
     }
 
@@ -275,13 +304,13 @@ render (w, h) state =
     shapes =
       [ renderBackground (screenWidth, screenHeight)
       , renderShip state.ship
-      , renderBullet state.bullet ]
+      , renderBullet state.bullet
+      , renderBullet state.invaderBullet
+      ]
     shields = List.map renderShield state.shields
-    invaders =
-      state.invaders
-        |> List.filter (\i -> not i.dead)
-        |> List.map renderInvader
-    invaderBullets = List.map renderBullet state.invaderBullets
+    invaders = state.invaders
+      |> List.filter (\i -> not i.dead)
+      |> List.map renderInvader
     withShields = List.append shapes shields
     withInvaders = List.append withShields invaders
   in
