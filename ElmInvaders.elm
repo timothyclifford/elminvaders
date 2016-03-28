@@ -234,8 +234,9 @@ getRandom : List Invader -> Maybe Invader
 getRandom invaders =
   let
     array = Array.fromList invaders
+    seed = Random.initialSeed 1234
     generator = Random.int 0 ((Array.length array) - 1)
-    random = fst (Random.generate generator state.steps)
+    random = fst (Random.generate generator seed)
   in
     Array.get random array
 
