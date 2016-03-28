@@ -25,6 +25,8 @@ type alias Shield =
 type alias Invader =
   { x: Float
   , y: Float
+  , row: Float
+  , column: Float
   , delta: Float
   , direction: Direction
   , breed: Breed
@@ -40,7 +42,7 @@ type alias State =
   { view: View
   , ship: Ship
   , shields: List Shield
-  , invaders: List (List Invader)
+  , invaders: List Invader
   , bullet: Bullet
   , invaderBullets: List Bullet
   , score: Int

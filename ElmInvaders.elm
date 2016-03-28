@@ -21,11 +21,11 @@ screenTop = (screenHeight / 2)
 screenBottom = -(screenHeight / 2)
 
 backgroundColour = (rgba 0 0 0 1)
-shipSpeed = 10
+shipSpeed = 8
 shipRadius = 12
 shipSize = shipRadius * 2
 shipColour = (rgba 255 255 255 1)
-shieldWidth = 100
+shieldWidth = 75
 shieldHeight = 5
 shieldColour = (rgba 255 255 255 1)
 bulletSpeed = 15
@@ -39,8 +39,9 @@ invaderGapX = 25
 invaderGapY = 15
 invadersRows = 4
 invadersColumns = 8
+invadersTotal = invadersRows * invadersColumns
 invadersMoveX = 10
-invadersMoveY = 2
+invadersMoveY = 5
 invadersMoveMax = screenWidth - (invaderSize * 2) - (invadersColumns * (invaderSize + invaderGapX))
 
 -- UPDATE
@@ -51,22 +52,27 @@ defaultShip =
 
 defaultShields : List Shield
 defaultShields =
-  [ Shield -200 (screenBottom + 80) 5
-  , Shield 0 (screenBottom + 80) 5
-  , Shield 200 (screenBottom + 80) 5 ]
+  [ Shield -300 (screenBottom + 80) 5
+  , Shield -100 (screenBottom + 80) 5
+  , Shield 100 (screenBottom + 80) 5
+  , Shield 300 (screenBottom + 80) 5 ]
 
-defaultInvaders : List (List Invader)
+defaultInvaders : List Invader
 defaultInvaders =
-  [0..invadersRows]
-    |> List.map (\y -> (List.map (\x -> defaultInvader x y) [0..invadersColumns]))
+  [0..(invadersTotal - 1)]
+    |> List.map (\i -> defaultInvader i)
 
-defaultInvader : Float -> Float -> Invader
-defaultInvader x y =
+defaultInvader : Float -> Invader
+defaultInvader index =
   let
-    x = (screenLeft + invaderSize + (x * (invaderSize + invaderGapX)))
-    y = (screenTop - 50 - invaderSize - (y * (invaderSize + invaderGapY)))
+    row = toFloat (floor (index / invadersColumns))
+    column = if row == 0 then index else index - (row * invadersColumns)
+    paddingLeft = screenLeft + invaderSize
+    paddingTop = screenTop - 50 - invaderSize
+    x = paddingLeft + (column * (invaderSize + invaderGapX))
+    y = paddingTop - (row * (invaderSize + invaderGapY))
   in
-    Invader x y 0 Right Easy False
+    Invader x y row column 0 Right Easy False
 
 defaultBullet : Bullet
 defaultBullet =
@@ -94,12 +100,8 @@ delta =
   Signal.map inSeconds (fps 30)
 
 input : Signal Input
-input = Signal.sampleOn delta <|
-  Signal.map3
-    Input
-    Keyboard.space
-    Keyboard.arrows
-    delta
+input =
+  Signal.sampleOn delta <| Signal.map3 Input Keyboard.space Keyboard.arrows delta
 
 updateShip : Input -> State -> Ship
 updateShip input state =
@@ -121,9 +123,9 @@ updateBullet : Input -> State -> Bullet
 updateBullet input state =
   let
     -- Is bullet hitting a shield
-    bullet1 = hitShield state.shields state.bullet
+    bullet1 = bulletHitShields state.shields state.bullet
       -- Is bullet hitting an invader
-    bullet2 = hitInvader state.invaders bullet1
+    bullet2 = bulletHitInvaders state.invaders bullet1
     -- Is bullet being shot
     bullet3 =
       if input.space && (state.bullet.y > screenTop)
@@ -134,37 +136,17 @@ updateBullet input state =
   in
     movedBullet
 
-hitShield : List Shield -> Bullet -> Bullet
-hitShield shields bullet =
-  let
-    -- Iterate through all rows then columns, check bullet is within shield
-    didHit = List.any (\s -> s.layers > 0 && (bulletHitShield s bullet)) shields
-  in
-    { x = bullet.x
-    , y = if didHit then 10000 else bullet.y
-    }
-
-hitInvader : List (List Invader) -> Bullet -> Bullet
-hitInvader invaders bullet =
-  let
-    -- Iterate through all rows then columns, check bullet is within invader
-    didHit = List.any (\r -> List.any (\i -> not i.dead && (bulletHitInvader i bullet)) r) invaders
-  in
-    { x = bullet.x
-    , y = if didHit then 10000 else bullet.y
-    }
-
 moveBullet : Bullet -> Bullet
 moveBullet bullet =
   { bullet | y = bullet.y + bulletSpeed }
 
-updateInvaders : Input -> State -> List (List Invader)
+updateInvaders : Input -> State -> List Invader
 updateInvaders input state =
   let
-    invaders' = List.map (\r -> List.map (\i -> isInvaderDead i state.bullet) r) state.invaders
+    invaders' = List.map (\i -> isInvaderDead i state.bullet) state.invaders
   in
     if state.steps % 15 == 0
-    then List.map (\r -> List.map moveInvader r) invaders'
+    then List.map moveInvader invaders'
     else invaders'
 
 isInvaderDead : Invader -> Bullet -> Invader
@@ -176,16 +158,14 @@ moveInvader invader =
   -- If moving right and at screen edge, change to left
   if invader.delta >= invadersMoveMax && invader.direction == Right
   then { invader
-    | x = invader.x - invadersMoveX
-    , y = invader.y - invadersMoveY
+    | y = invader.y - invadersMoveY
     , delta = 0
     , direction = Left
     }
   -- If moving left and at screen edge, change to right
   else if invader.delta >= invadersMoveMax && invader.direction == Left
   then { invader
-    | x = invader.x + invadersMoveX
-    , y = invader.y - invadersMoveY
+    | y = invader.y - invadersMoveY
     , delta = 0
     , direction = Right
     }
@@ -196,6 +176,16 @@ moveInvader invader =
     , delta = invader.delta + invadersMoveX
     }
 
+bulletHitShields : List Shield -> Bullet -> Bullet
+bulletHitShields shields bullet =
+  let
+    -- Iterate through all rows then columns, check bullet is within shield
+    didHit = List.any (\s -> s.layers > 0 && (bulletHitShield s bullet)) shields
+  in
+    { x = bullet.x
+    , y = if didHit then 10000 else bullet.y
+    }
+
 bulletHitShield : Shield -> Bullet -> Bool
 bulletHitShield shield bullet =
   closeTo
@@ -203,6 +193,16 @@ bulletHitShield shield bullet =
     (bullet.x - bulletRadius, bullet.y - bulletRadius)
     (shield.x - (shieldWidth / 2), shield.y - shieldHeight)
     (shield.x + (shieldWidth / 2), shield.y + shieldHeight)
+
+bulletHitInvaders : List Invader -> Bullet -> Bullet
+bulletHitInvaders invaders bullet =
+  let
+    -- Iterate through all rows then columns, check bullet is within invader
+    didHit = List.any (\i -> not i.dead && (bulletHitInvader i bullet)) invaders
+  in
+    { x = bullet.x
+    , y = if didHit then 10000 else bullet.y
+    }
 
 bulletHitInvader : Invader -> Bullet -> Bool
 bulletHitInvader invader bullet =
@@ -279,7 +279,6 @@ render (w, h) state =
     shields = List.map renderShield state.shields
     invaders =
       state.invaders
-        |> List.concat
         |> List.filter (\i -> not i.dead)
         |> List.map renderInvader
     invaderBullets = List.map renderBullet state.invaderBullets
