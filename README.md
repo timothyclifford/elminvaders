@@ -5,7 +5,6 @@ Building space invaders with Elm
 
 - Score
 - Invaders shoot
-- Barriers/shields
 - Bonus ship
 - Make it pretty
 - Sound
