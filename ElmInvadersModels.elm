@@ -14,6 +14,7 @@ type alias Positioned =
 
 type alias Ship =
   { x: Float
+  , y: Float
   }
 
 type alias Shield =
@@ -45,6 +46,8 @@ type alias State =
   , bullet: Bullet
   , invaderBullet: Bullet
   , steps: Int
+  , lives: Int
+  , paused: Bool
   }
 
 type alias KeyboardInput =

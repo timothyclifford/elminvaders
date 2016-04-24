@@ -1,6 +1,10 @@
 # elminvaders
 Building space invaders with Elm
 
+#### get started
+
+`elm reactor`
+
 #### todo
 
 - Score
